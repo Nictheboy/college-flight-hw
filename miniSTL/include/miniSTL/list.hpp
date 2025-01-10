@@ -24,9 +24,7 @@ struct List {
     struct ListNode {
         ListNode* m_next;
         ListNode* m_prev;
-        union {
-            T m_value;
-        };
+        T m_value;
 
         ListNode(ListNode* next, ListNode* prev)
             : ListNode(next, prev, T()) {}
@@ -63,6 +61,7 @@ struct List {
         clear();
         for (auto const& val : that)
             push_back(val);
+        return *this;
     }
 
     bool empty() const { return size() == 0; }

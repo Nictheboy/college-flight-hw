@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <compare>
 #include <cstddef>
 #include <initializer_list>
@@ -8,7 +9,6 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
-#include <assert.h>
 
 template <class T, class Alloc = std::allocator<T>>
 struct Vector {
@@ -24,6 +24,7 @@ struct Vector {
     using const_iterator = T const*;
     using reverse_iterator = std::reverse_iterator<T*>;
     using const_reverse_iterator = std::reverse_iterator<T const*>;
+    using allocator_traits = std::allocator_traits<Alloc>;
 
     T* m_data;
     size_t m_size;
@@ -44,6 +45,8 @@ struct Vector {
         m_data = m_alloc.allocate(n);
         for (int i = 0; i < m_size; i++)
             m_data[i] = std::move(old[i]);
+        for (int i = m_size; i < n; i++)
+            allocator_traits::construct(m_alloc, m_data + i);
         m_alloc.deallocate(old, m_cap);
         m_cap = n;
     }
@@ -213,6 +216,7 @@ struct Vector {
     void pop_back() {
         assert(!empty());
         m_size--;
+        allocator_traits::destroy(m_alloc, m_data + m_size);
     }
 
     T* erase(T const* it) noexcept(std::is_nothrow_move_assignable_v<T>) {
