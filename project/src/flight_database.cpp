@@ -1,5 +1,6 @@
 #include "flight_database.hpp"
 #include <assert.h>
+#include <algorithm>
 #include <fstream>
 
 void FlightDatabase::LoadDatabase(std::string filename) {
@@ -69,11 +70,13 @@ FlightDatabase::Record FlightDatabase::QueryRecordById(Key id) const {
     return records[id - 1];
 }
 
-std::shared_ptr<List<Key>> FlightDatabase::QueryRecordIdsByAirportFrom(Airport airport) const {
+std::shared_ptr<Vector<Key>>
+FlightDatabase::QueryRecordIdsByAirportFrom(Airport airport) const {
     return airport_from_bucket_index[airport - airport_min];
 }
 
-std::shared_ptr<List<Key>> FlightDatabase::QueryRecordIdsByAirportTo(Airport airport) const {
+std::shared_ptr<Vector<Key>>
+FlightDatabase::QueryRecordIdsByAirportTo(Airport airport) const {
     return airport_to_bucket_index[airport - airport_min];
 }
 
@@ -92,11 +95,30 @@ void FlightDatabase::InitAirportBucketIndex() {
     airport_from_bucket_index.resize(size);
     airport_to_bucket_index.resize(size);
     for (auto i = 0; i < size; i++) {
-        airport_from_bucket_index[i] = std::make_shared<List<Key>>();
-        airport_to_bucket_index[i] = std::make_shared<List<Key>>();
+        airport_from_bucket_index[i] = std::make_shared<Vector<Key>>();
+        airport_to_bucket_index[i] = std::make_shared<Vector<Key>>();
     }
     for (auto record : records) {
         airport_from_bucket_index[record.airport_from - airport_min]->push_back(record.id);
         airport_to_bucket_index[record.airport_to - airport_min]->push_back(record.id);
+    }
+    // Sort the index according to datetime and airport
+    for (auto i = 0; i < size; i++) {
+        auto from_bucket = airport_from_bucket_index[i];
+        std::sort(from_bucket->begin(), from_bucket->end(), [this](Key a, Key b) {
+            auto& record_a = records[a - 1];
+            auto& record_b = records[b - 1];
+            return record_a.datetime_from < record_b.datetime_from ||
+                   (record_a.datetime_from == record_b.datetime_from &&
+                    record_a.airport_to < record_b.airport_to);
+        });
+        auto to_bucket = airport_to_bucket_index[i];
+        std::sort(to_bucket->begin(), to_bucket->end(), [this](Key a, Key b) {
+            auto& record_a = records[a - 1];
+            auto& record_b = records[b - 1];
+            return record_a.datetime_to < record_b.datetime_to ||
+                   (record_a.datetime_to == record_b.datetime_to &&
+                    record_a.airport_from < record_b.airport_from);
+        });
     }
 }

@@ -18,8 +18,8 @@ class FlightDatabase {
 
     DateTime ParseDateTime(std::string datetime);
     Record QueryRecordById(Key id) const;
-    std::shared_ptr<List<Key>> QueryRecordIdsByAirportFrom(Airport airport) const;
-    std::shared_ptr<List<Key>> QueryRecordIdsByAirportTo(Airport airport) const;
+    std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportFrom(Airport airport) const;
+    std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportTo(Airport airport) const;
     DateTime AirportMin() const { return airport_min; }
     DateTime AirportMax() const { return airport_max; }
 
@@ -33,6 +33,6 @@ class FlightDatabase {
     Airport airport_min, airport_max;
     void InitAirportRange();
 
-    Vector<std::shared_ptr<List<Key>>> airport_from_bucket_index, airport_to_bucket_index;
+    Vector<std::shared_ptr<Vector<Key>>> airport_from_bucket_index, airport_to_bucket_index;
     void InitAirportBucketIndex();
 };
