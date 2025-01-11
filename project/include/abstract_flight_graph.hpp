@@ -14,6 +14,9 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     struct EdgeKey {
         NodeKey node;
         int weight;
+        bool operator==(const EdgeKey& other) const {
+            return node == other.node && weight == other.weight;
+        }
     };
 
     virtual std::shared_ptr<Vector<EdgeKey>> DiscreteChildrenOf(NodeKey node) const = 0;
@@ -51,8 +54,8 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     AbstractFlightGraph(Airport airport_min, Airport airport_max);
     ~AbstractFlightGraph() = default;
 
-    mutable SurakartaEvent<Node&> OnNodeDiscovered;
-    mutable SurakartaEvent<Node&> OnNodeVisited;
+    mutable SurakartaEvent<PNode> OnNodeDiscovered;
+    mutable SurakartaEvent<PNode> OnNodeVisited;
 
     PNode GetNode(NodeKey key) const;
 };

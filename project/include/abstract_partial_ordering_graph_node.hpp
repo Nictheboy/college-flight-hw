@@ -11,7 +11,6 @@ class AbstractPartialOrderingGraphNode {
     using Node = ConcreteNode;
     using AbstractNode = AbstractPartialOrderingGraphNode;
     using PNode = std::shared_ptr<Node>;
-    using PAbstractNode = std::shared_ptr<AbstractNode>;
     struct Edge {
         PNode node;
         int weight;
@@ -30,84 +29,84 @@ class AbstractPartialOrderingGraphNode {
         DISCOVERED,
         VISITED
     };
+
+   private:
     Status status = Status::UNDISCOVERED;
     int priority;
 
-    SurakartaEvent<Node&> OnDiscovered;
-    SurakartaEvent<Node&> OnVisited;
-
-    std::shared_ptr<Vector<Edge>> DFS() {
-        ResetSubgraphStatus();
-        auto list = std::make_shared<Vector<Edge>>();
-        RecursiveDFS(list);
-        return list;
+   public:
+    Status GetStatus() { return status; }
+    SurakartaEvent<> OnDiscovered;
+    SurakartaEvent<> OnVisited;
+    void Discover(bool emit_event = true) {
+        assert(status == Status::UNDISCOVERED);
+        status = Status::DISCOVERED;
+        if (emit_event)
+            OnDiscovered.Invoke();
+    }
+    void Visit(bool emit_event = true) {
+        assert(status == Status::DISCOVERED);
+        status = Status::VISITED;
+        if (emit_event)
+            OnVisited.Invoke();
     }
 
-    std::shared_ptr<Vector<Edge>> BFS() {
-        auto update_priority = [](AbstractNode& node, Edge& edge) {
-            edge.node->priority = node.priority + 1;
+    void DFS() {
+        ResetSubgraphStatus();
+        RecursiveDFS();
+    }
+
+    using PriorityUpdater = std::function<void(Node* parent, Node* child, int weight)>;
+
+    void BFS() {
+        auto update_priority = [](Node* parent, Node* child, int weight) {
+            child->priority = parent->priority + 1;
         };
-        return PFS(update_priority);
+        PFS(update_priority);
     }
 
-    std::shared_ptr<Vector<Edge>> PFS(std::function<void(AbstractNode&, Edge&)> update_priority) {
+    void PFS(PriorityUpdater update_priority) {
         ResetSubgraphStatus();
-        auto list = std::make_shared<Vector<Edge>>();
-        auto queue = std::priority_queue<Edge, Vector<Edge>, std::function<bool(Edge, Edge)>>(
-            [](Edge a, Edge b) { return a.node->priority > b.node->priority; });
-        auto children = DiscreteChildren();
+        auto queue = std::priority_queue<Node*, Vector<Node*>, std::function<bool(Node*, Node*)>>(
+            [](Node* a, Node* b) { return a->priority > b->priority; });
         priority = 0;
-        for (auto& child : *children) {
-            update_priority(*this, child);
-            child.node->status = Status::DISCOVERED;
-            OnDiscovered.Invoke(*child.node);
-            queue.push(child);
-        }
+        Discover();
+        queue.push(static_cast<Node*>(this));
         while (!queue.empty()) {
-            auto edge = queue.top();
+            auto node = queue.top();
             queue.pop();
-            assert(edge.node->status != Status::UNDISCOVERED);
-            if (edge.node->status == Status::DISCOVERED) {
-                list->push_back(edge);
-                edge.node->status = Status::VISITED;
-                OnVisited.Invoke(*edge.node);
-                auto children = static_cast<PAbstractNode>(edge.node)->DiscreteChildren();
-                for (auto& child : *children) {
-                    if (child.node->status == Status::UNDISCOVERED) {
-                        update_priority(*edge.node, child);
-                        child.node->status = Status::DISCOVERED;
-                        OnDiscovered.Invoke(*child.node);
-                        queue.push(child);
+            assert(node->status != Status::UNDISCOVERED);
+            if (node->status == Status::DISCOVERED) {
+                auto edges = ((AbstractNode*)node)->DiscreteChildren();
+                for (auto& edge : *edges) {
+                    auto new_node = edge.node.get();
+                    if (new_node->status == Status::UNDISCOVERED) {
+                        update_priority(node, new_node, edge.weight);
+                        new_node->Discover();
+                        queue.push(new_node);
                     }
                 }
+                node->Visit();
             }
         }
-        return list;
     }
 
    private:
     void ResetSubgraphStatus() {
         if (status != Status::UNDISCOVERED) {
             auto children = DiscreteChildren();
-            for (auto& child : *children) {
+            for (auto& child : *children)
                 child.node->ResetSubgraphStatus();
-            }
             status = Status::UNDISCOVERED;
         }
     }
 
-    void RecursiveDFS(std::shared_ptr<Vector<Edge>> list) {
-        assert(status == Status::UNDISCOVERED);
-        status = Status::DISCOVERED;
-        OnDiscovered.Invoke(*static_cast<Node*>(this));
+    void RecursiveDFS() {
+        Discover();
         auto children = DiscreteChildren();
-        for (auto& child : *children) {
-            if (child.node->status == Status::UNDISCOVERED) {
-                list->push_back(child);
-                child.node->RecursiveDFS(list);
-            }
-        }
-        status = Status::VISITED;
-        OnVisited.Invoke(*static_cast<Node*>(this));
+        for (auto& child : *children)
+            if (child.node->status == Status::UNDISCOVERED)
+                child.node->RecursiveDFS();
+        Visit();
     }
 };
