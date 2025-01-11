@@ -1,47 +1,61 @@
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <string>
 #include "../include/flight_planner.hpp"
 #include "../include/surakarta_logger.hpp"
 
-int main() {
-    auto logger = std::make_shared<SurakartaLoggerStdout>();
-    auto db = std::make_shared<FlightDatabase>("../project/data/flight-data.csv", logger);
-    auto planner = std::make_shared<Planner>(db);
+auto logger = std::make_shared<SurakartaLoggerStdout>();
+auto db = std::make_shared<FlightDatabase>("../project/data/flight-data.csv", logger);
+auto planner = std::make_shared<Planner>(db);
 
+static std::string ReadToken(std::string& query) {
+    auto token = query.substr(0, query.find(' '));
+    query = query.substr(query.find(' ') + 1);
+    return token;
+}
+
+static int ReadInt(std::string& query) {
+    return std::stoi(ReadToken(query));
+}
+
+static DateTime ReadDateTime(std::string& query) {
+    auto date = ReadToken(query);
+    auto time = ReadToken(query);
+    return db->ParseDateTime(date + " " + time);
+}
+
+int main() {
     while (!std::cin.eof()) {
         printf("> ");
         std::string query;
         std::getline(std::cin, query);
-        if (query == "exit")
+        auto operation = ReadToken(query);
+
+        bool failed = false;
+        auto begin = std::chrono::high_resolution_clock::now();
+        if (operation == "exit") {
+            logger->Log("Bye!");
             break;
-        if (query.starts_with("dfs")) {
-            query = query.substr(4);
-            auto airport_id = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto start_time = db->ParseDateTime(query);
-            auto result = planner->EnumerateAirportsDFS(airport_id, start_time);
+        } else if (operation == "dfs") {
+            auto airport = ReadInt(query);
+            auto start_time = ReadDateTime(query);
+            auto result = planner->EnumerateAirportsDFS(airport, start_time);
             for (auto airport : *result) {
                 printf("%d ", airport);
             }
             printf("\n");
-        }
-        if (query.starts_with("bfs")) {
-            query = query.substr(4);
-            auto airport_id = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto start_time = db->ParseDateTime(query);
-            auto result = planner->EnumerateAirportsBFS(airport_id, start_time);
+        } else if (operation == "bfs") {
+            auto airport = ReadInt(query);
+            auto start_time = ReadDateTime(query);
+            auto result = planner->EnumerateAirportsBFS(airport, start_time);
             for (auto airport : *result) {
                 printf("%d ", airport);
             }
             printf("\n");
-        }
-        if (query.starts_with("connectivity")) {
-            query = query.substr(13);
-            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
+        } else if (operation == "connectivity") {
+            auto airport_from = ReadInt(query);
+            auto airport_to = ReadInt(query);
             auto result = planner->EnumerateAllPaths(airport_from, airport_to);
             for (auto path : *result) {
                 for (auto record : *path) {
@@ -49,22 +63,11 @@ int main() {
                 }
                 printf("\n");
             }
-        }
-        if (query.starts_with("all_paths")) {
-            query = query.substr(10);
-            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto date_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto date_to = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_to = query;
-            auto datetime_from = db->ParseDateTime(date_from + " " + time_from);
-            auto datetime_to = db->ParseDateTime(date_to + " " + time_to);
+        } else if (operation == "all_paths") {
+            auto airport_from = ReadInt(query);
+            auto airport_to = ReadInt(query);
+            auto datetime_from = ReadDateTime(query);
+            auto datetime_to = ReadDateTime(query);
             auto result = planner->EnumerateAllPaths(airport_from, airport_to, datetime_from, datetime_to);
             for (auto path : *result) {
                 for (auto record : *path) {
@@ -72,22 +75,11 @@ int main() {
                 }
                 printf("\n");
             }
-        }
-        if (query.starts_with("minimum_cost_path")) {
-            query = query.substr(18);
-            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto date_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto date_to = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_to = query;
-            auto datetime_from = db->ParseDateTime(date_from + " " + time_from);
-            auto datetime_to = db->ParseDateTime(date_to + " " + time_to);
+        } else if (operation == "minimum_cost_path") {
+            auto airport_from = ReadInt(query);
+            auto airport_to = ReadInt(query);
+            auto datetime_from = ReadDateTime(query);
+            auto datetime_to = ReadDateTime(query);
             auto result = planner->QueryMinimumCostPath(airport_from, airport_to, datetime_from, datetime_to);
             if (result.has_value())
                 for (auto record : *result.value()) {
@@ -96,22 +88,11 @@ int main() {
             else
                 printf("No path found");
             printf("\n");
-        }
-        if (query.starts_with("shortest_path")) {
-            query = query.substr(14);
-            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
-            query = query.substr(query.find(' ') + 1);
-            auto date_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_from = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto date_to = query.substr(0, query.find(' '));
-            query = query.substr(query.find(' ') + 1);
-            auto time_to = query;
-            auto datetime_from = db->ParseDateTime(date_from + " " + time_from);
-            auto datetime_to = db->ParseDateTime(date_to + " " + time_to);
+        } else if (operation == "shortest_path") {
+            auto airport_from = ReadInt(query);
+            auto airport_to = ReadInt(query);
+            auto datetime_from = ReadDateTime(query);
+            auto datetime_to = ReadDateTime(query);
             auto result = planner->QueryMinimumTimePath(airport_from, airport_to, datetime_from, datetime_to);
             if (result.has_value())
                 for (auto record : *result.value()) {
@@ -120,6 +101,15 @@ int main() {
             else
                 printf("No path found");
             printf("\n");
+        } else {
+            if (!operation.empty())
+                logger->Log("Unknown operation: %s", operation.c_str());
+            failed = true;
+        }
+        if (!failed) {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+            logger->Log("Query complete in %d ms", duration.count());
         }
     }
     return 0;
