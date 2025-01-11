@@ -1,11 +1,10 @@
 #pragma once
 #include <memory>
-#include <miniSTL/list.hpp>
-#include <miniSTL/vector.hpp>
+#include <miniSTL/stl.hpp>
 
 template <typename ConcreteNode>
-class PartialOrderingGraphNode {
-   public:
+class AbstractPartialOrderingGraphNode {
+   protected:
     using Node = ConcreteNode;
     using PNode = std::shared_ptr<Node>;
     struct Edge {
@@ -13,10 +12,12 @@ class PartialOrderingGraphNode {
         int weight;
     };
 
-    PartialOrderingGraphNode() {}
-    virtual ~PartialOrderingGraphNode() {}
     virtual std::shared_ptr<Vector<Edge>> DiscreteChildren() = 0;
-    virtual bool IsContinuousChildren(PNode child) = 0;
+    virtual bool IsContinuousChild(PNode child) = 0;
+
+   public:
+    AbstractPartialOrderingGraphNode() {}
+    virtual ~AbstractPartialOrderingGraphNode() = default;
 
     std::shared_ptr<Vector<Edge>> DFS() {
         ResetSubgraphStatus();

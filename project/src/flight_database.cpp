@@ -1,4 +1,6 @@
-#include "database.hpp"
+#include "flight_database.hpp"
+#include <assert.h>
+#include <fstream>
 
 void FlightDatabase::LoadDatabase(std::string filename) {
     auto file = std::ifstream();
@@ -13,17 +15,6 @@ void FlightDatabase::LoadDatabase(std::string filename) {
             break;
         records.push_back(ParseRecord(line));
     }
-}
-
-std::shared_ptr<FlightDatabase::Node> FlightDatabase::GetNode(Airport airport, DateTime no_sooner_than) {
-    auto nodes = node_pool[airport - airport_min];
-    for (auto& node : *nodes) {
-        if (node->NoSoonerThan() == no_sooner_than)
-            return node;
-    }
-    auto node = std::make_shared<Node>(*this, airport, no_sooner_than);
-    nodes->push_back(node);
-    return node;
 }
 
 FlightDatabase::Record FlightDatabase::ParseRecord(std::string line) {
@@ -56,12 +47,11 @@ FlightDatabase::FlightDatabase(std::string filename, std::shared_ptr<SurakartaLo
     logger->Log("Creating indexes and the graph");
     InitAirportRange();
     InitAirportBucketIndex();
-    InitNodePool();
     logger->Log("");
     logger->Log("Bootstrap complete. See README.md for usage.");
 }
 
-FlightDatabase::DateTime FlightDatabase::ParseDateTime(std::string datetime) {
+DateTime FlightDatabase::ParseDateTime(std::string datetime) {
     // 5/6/2017 12:20
     DateTime month = std::stoi(datetime.substr(0, datetime.find('/')));
     datetime = datetime.substr(datetime.find('/') + 1);
@@ -73,6 +63,18 @@ FlightDatabase::DateTime FlightDatabase::ParseDateTime(std::string datetime) {
     datetime = datetime.substr(datetime.find(':') + 1);
     DateTime minute = std::stoi(datetime);
     return (year * 10000 + month * 100 + day) * 10000 + hour * 100 + minute;
+}
+
+FlightDatabase::Record FlightDatabase::QueryRecordById(Key id) const {
+    return records[id - 1];
+}
+
+std::shared_ptr<List<Key>> FlightDatabase::QueryRecordIdsByAirportFrom(Airport airport) const {
+    return airport_from_bucket_index[airport - airport_min];
+}
+
+std::shared_ptr<List<Key>> FlightDatabase::QueryRecordIdsByAirportTo(Airport airport) const {
+    return airport_to_bucket_index[airport - airport_min];
 }
 
 void FlightDatabase::InitAirportRange() {
@@ -96,19 +98,5 @@ void FlightDatabase::InitAirportBucketIndex() {
     for (auto record : records) {
         airport_from_bucket_index[record.airport_from - airport_min]->push_back(record.id);
         airport_to_bucket_index[record.airport_to - airport_min]->push_back(record.id);
-    }
-}
-
-void FlightDatabase::Node::LoadDiscreteChildren() {
-    assert(!discrete_children);
-    auto ids = db.QueryRecordIdsByAirportFrom(airport);
-    discrete_children = std::make_shared<Vector<Edge>>();
-    discrete_children->reserve(ids->size());
-    for (auto id : *ids) {
-        auto record = db.QueryRecordById(id);
-        if (record.datetime_from >= no_sooner_than) {
-            auto node = db.GetNode(record.airport_to, record.datetime_to);
-            discrete_children->push_back({node, record.price});
-        }
     }
 }

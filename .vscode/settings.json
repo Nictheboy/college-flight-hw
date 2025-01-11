@@ -68,6 +68,10 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "strstream": "cpp",
+        "complex": "cpp",
+        "source_location": "cpp",
+        "shared_mutex": "cpp"
     }
 }

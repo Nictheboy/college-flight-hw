@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "planner.hpp"
+#include "flight_planner.hpp"
 #include "surakarta_logger.hpp"
 
 int main() {
@@ -23,7 +23,7 @@ int main() {
             auto result = planner->query_dfs(airport_id, start_time);
             printf("%d", airport_id);
             for (auto& edge : *result) {
-                printf(" %d", edge.node->Airport());
+                printf(" %d", edge.node->Key().airport);
             }
             printf("\n");
         }

@@ -43,10 +43,10 @@ struct Vector {
         assert(n >= m_size);
         T* old = m_data;
         m_data = m_alloc.allocate(n);
+        for (int i = 0; i < n; i++)
+            allocator_traits::construct(m_alloc, m_data + i);
         for (int i = 0; i < m_size; i++)
             m_data[i] = std::move(old[i]);
-        for (int i = m_size; i < n; i++)
-            allocator_traits::construct(m_alloc, m_data + i);
         m_alloc.deallocate(old, m_cap);
         m_cap = n;
     }

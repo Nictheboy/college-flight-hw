@@ -1,17 +1,18 @@
 #pragma once
-#include "database.hpp"
+#include "flight_graph_complete.hpp"
 
 class Planner {
    private:
     std::shared_ptr<FlightDatabase> db;
+    std::shared_ptr<FlightGraphComplete> graph_complete;
 
    public:
     Planner(std::shared_ptr<FlightDatabase> db)
-        : db(db) {}
+        : db(db), graph_complete(std::make_shared<FlightGraphComplete>(db)) {}
 
     auto query_dfs(int airport_id, std::string start_time) {
-        auto node = FlightDatabase::Node(*db, airport_id, db->ParseDateTime(start_time));
-        return node.DFS();
+        auto node = graph_complete->GetNode({airport_id, db->ParseDateTime(start_time)});
+        return node->DFS();
     }
 
     struct BFSResult {
