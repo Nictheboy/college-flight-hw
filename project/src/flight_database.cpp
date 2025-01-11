@@ -41,15 +41,10 @@ FlightDatabase::Record FlightDatabase::ParseRecord(std::string line) {
     return record;
 }
 
-FlightDatabase::FlightDatabase(std::string filename, std::shared_ptr<SurakartaLogger> logger)
-    : logger(logger) {
-    logger->Log("Loading database from %s", filename.c_str());
+FlightDatabase::FlightDatabase(std::string filename) {
     LoadDatabase(filename);
-    logger->Log("Creating indexes and the graph");
     InitAirportRange();
     InitAirportBucketIndex();
-    logger->Log("");
-    logger->Log("Bootstrap complete. See README.md for usage.");
 }
 
 DateTime FlightDatabase::ParseDateTime(std::string datetime) {

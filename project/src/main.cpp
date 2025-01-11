@@ -1,12 +1,9 @@
-#include <chrono>
 #include <iostream>
 #include <memory>
 #include <string>
 #include "../include/flight_planner.hpp"
-#include "../include/surakarta_logger.hpp"
 
-auto logger = std::make_shared<SurakartaLoggerStdout>();
-auto db = std::make_shared<FlightDatabase>("../project/data/flight-data.csv", logger);
+auto db = std::make_shared<FlightDatabase>("../project/data/flight-data.csv");
 auto planner = std::make_shared<Planner>(db);
 
 static std::string ReadToken(std::string& query) {
@@ -33,9 +30,7 @@ int main() {
         auto operation = ReadToken(query);
 
         bool failed = false;
-        auto begin = std::chrono::high_resolution_clock::now();
         if (operation == "exit") {
-            logger->Log("Bye!");
             break;
         } else if (operation == "dfs") {
             auto airport = ReadInt(query);
@@ -103,13 +98,8 @@ int main() {
             printf("\n");
         } else {
             if (!operation.empty())
-                logger->Log("Unknown operation: %s", operation.c_str());
+                printf("Unknown operation: %s", operation.c_str());
             failed = true;
-        }
-        if (!failed) {
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-            logger->Log("Query complete in %d ms", duration.count());
         }
     }
     return 0;

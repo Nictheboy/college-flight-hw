@@ -4,11 +4,10 @@
 #include <optional>
 #include <string>
 #include "flight_types.hpp"
-#include "surakarta_logger.hpp"
 
 class FlightDatabase {
    public:
-    FlightDatabase(std::string filename, std::shared_ptr<SurakartaLogger> logger = std::make_shared<SurakartaLoggerNull>());
+    FlightDatabase(std::string filename);
     struct Record {
         Key id;
         Airport airport_from, airport_to;
@@ -25,8 +24,6 @@ class FlightDatabase {
     DateTime AirportMax() const { return airport_max; }
 
    private:
-    std::shared_ptr<SurakartaLogger> logger;
-
     Vector<Record> records;
     Record ParseRecord(std::string line);
     void LoadDatabase(std::string filename);
