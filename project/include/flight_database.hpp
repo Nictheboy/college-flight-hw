@@ -18,6 +18,7 @@ class FlightDatabase {
 
     DateTime ParseDateTime(std::string datetime);
     Record QueryRecordById(Key id) const;
+    Record QueryRecordByAirportsAndArrivalTime(Airport airport_from, Airport airport_to, DateTime datetime_to) const;
     std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportFrom(Airport airport) const;
     std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportTo(Airport airport) const;
     DateTime AirportMin() const { return airport_min; }

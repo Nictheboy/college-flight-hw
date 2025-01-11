@@ -58,4 +58,23 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     mutable SurakartaEvent<PNode> OnNodeVisited;
 
     PNode GetNode(NodeKey key) const;
+
+    using Path = std::shared_ptr<List<PNode>>;
+    using PathList = std::shared_ptr<List<Path>>;
+    PathList AllPathsTo(PNode from, PNode to, int depth_limit) {
+        auto result = std::make_shared<List<Path>>();
+        auto stack = std::make_shared<List<PNode>>();
+        OnNodeDiscovered.AddListener([stack](auto node) { stack->push_back(node); });
+        OnNodeVisited.AddListener([stack, result, to](auto node) {
+            if (node == to || node->IsContinuousChild(to)) {
+                auto path = std::make_shared<List<PNode>>();
+                for (auto& node : *stack)
+                    path->push_back(node);
+                result->push_back(path);
+            }
+            stack->pop_back();
+        });
+        from->DFS(depth_limit);
+        return result;
+    }
 };

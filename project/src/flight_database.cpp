@@ -70,6 +70,26 @@ FlightDatabase::Record FlightDatabase::QueryRecordById(Key id) const {
     return records[id - 1];
 }
 
+FlightDatabase::Record
+FlightDatabase::QueryRecordByAirportsAndArrivalTime(
+    Airport airport_from,
+    Airport airport_to,
+    DateTime datetime_to) const {
+    auto subquery = QueryRecordIdsByAirportFrom(airport_from);
+    auto result = std::optional<Record>();
+    for (auto id : *subquery) {
+        auto record = QueryRecordById(id);
+        if (record.airport_to == airport_to && record.datetime_to == datetime_to) {
+            if (result.has_value())
+                throw std::runtime_error("Unique violation!");
+            result = record;
+        }
+    }
+    if (!result.has_value())
+        throw std::runtime_error("Record not found!");
+    return result.value();
+}
+
 std::shared_ptr<Vector<Key>>
 FlightDatabase::QueryRecordIdsByAirportFrom(Airport airport) const {
     return airport_from_bucket_index[airport - airport_min];

@@ -1,4 +1,5 @@
 #pragma once
+#include <climits>
 #include <functional>
 #include <memory>
 #include <miniSTL/stl.hpp>
@@ -51,9 +52,9 @@ class AbstractPartialOrderingGraphNode {
             OnVisited.Invoke();
     }
 
-    void DFS() {
+    void DFS(int depth_limit = INT_MAX) {
         ResetSubgraphStatus();
-        RecursiveDFS();
+        RecursiveDFS(depth_limit);
     }
 
     using PriorityUpdater = std::function<void(Node* parent, Node* child, int weight)>;
@@ -101,12 +102,13 @@ class AbstractPartialOrderingGraphNode {
         }
     }
 
-    void RecursiveDFS() {
+    void RecursiveDFS(int depth_limit) {
         Discover();
         auto children = DiscreteChildren();
-        for (auto& child : *children)
-            if (child.node->status == Status::UNDISCOVERED)
-                child.node->RecursiveDFS();
+        if (depth_limit > 0)
+            for (auto& child : *children)
+                if (child.node->status == Status::UNDISCOVERED)
+                    child.node->RecursiveDFS(depth_limit - 1);
         Visit();
     }
 };
