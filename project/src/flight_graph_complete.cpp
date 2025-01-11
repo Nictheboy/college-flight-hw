@@ -1,4 +1,4 @@
-#include "flight_graph_complete.hpp"
+#include "../include/flight_graph_complete.hpp"
 
 FlightGraphComplete::FlightGraphComplete(std::shared_ptr<FlightDatabase> flight_database)
     : AbstractFlightGraph(

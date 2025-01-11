@@ -1,4 +1,4 @@
-#include "abstract_flight_graph.hpp"
+#include "../include/abstract_flight_graph.hpp"
 
 void AbstractFlightGraph::Node::LoadDiscreteChildren() {
     assert(!discrete_children);

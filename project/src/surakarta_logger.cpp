@@ -1,7 +1,7 @@
 // Copied from: https://github.com/surakarta-game/surakarta-core/blob/main/src/surakarta_logger.cpp
 // This is part of one of my previous labs.
 
-#include "surakarta_logger.hpp"
+#include "../include/surakarta_logger.hpp"
 #include <stdarg.h>
 #include <stdio.h>
 #include <chrono>

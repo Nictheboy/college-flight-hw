@@ -1,4 +1,4 @@
-#include "flight_graph_airport_only.hpp"
+#include "../include/flight_graph_airport_only.hpp"
 #include <algorithm>
 
 FlightGraphAirportOnly::FlightGraphAirportOnly(std::shared_ptr<FlightDatabase> flight_database)

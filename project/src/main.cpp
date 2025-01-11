@@ -1,8 +1,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "flight_planner.hpp"
-#include "surakarta_logger.hpp"
+#include "../include/flight_planner.hpp"
+#include "../include/surakarta_logger.hpp"
 
 int main() {
     auto logger = std::make_shared<SurakartaLoggerStdout>();

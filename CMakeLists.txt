@@ -36,11 +36,12 @@ target_link_libraries(airplane PRIVATE miniSTL::miniSTL)
 
 # -------------------------- Test --------------------------
 
-file(GLOB test_sources test/*.cpp)
+file(GLOB test_sources test/*.cpp project/src/*.cpp project/include/*.hpp)
+list(FILTER test_sources EXCLUDE REGEX ".*/main\\.cpp$")
 
-add_executable(TestSTL ${test_sources})
-target_link_libraries(TestSTL PRIVATE miniSTL::miniSTL Catch2::Catch2WithMain)
+add_executable(unit_test ${test_sources})
+target_link_libraries(unit_test PRIVATE miniSTL::miniSTL Catch2::Catch2WithMain)
 
 include(CTest)
 include(Catch)
-catch_discover_tests(TestSTL)
+catch_discover_tests(unit_test)
