@@ -7,7 +7,8 @@
 #include "surakarta_event.hpp"
 
 template <typename ConcreteNode>
-class AbstractPartialOrderingGraphNode {
+class AbstractPartialOrderingGraphNode
+    : public std::enable_shared_from_this<ConcreteNode> {
    protected:
     using Node = ConcreteNode;
     using AbstractNode = AbstractPartialOrderingGraphNode;
@@ -33,7 +34,8 @@ class AbstractPartialOrderingGraphNode {
 
    private:
     Status status = Status::UNDISCOVERED;
-    int priority;
+    int priority = INT_MAX;
+    PNode parent;
 
    public:
     Status GetStatus() { return status; }
@@ -57,8 +59,6 @@ class AbstractPartialOrderingGraphNode {
         RecursiveDFS(depth_limit);
     }
 
-    using PriorityUpdater = std::function<void(Node* parent, Node* child, int weight)>;
-
     void BFS() {
         auto update_priority = [](Node* parent, Node* child, int weight) {
             child->priority = parent->priority + 1;
@@ -66,6 +66,48 @@ class AbstractPartialOrderingGraphNode {
         PFS(update_priority);
     }
 
+    void PFS() {
+        auto update_priority = [](Node* parent, Node* child, int weight) {
+            if (parent->priority + weight < child->priority) {
+                child->priority = parent->priority + weight;
+                child->parent = parent->shared_from_this();
+            }
+        };
+        PFS(update_priority);
+    }
+
+    using Path = std::shared_ptr<List<PNode>>;
+    Path GetPath() {
+        auto path = std::make_shared<List<PNode>>();
+        auto node = static_cast<Node*>(this);
+        while (node != nullptr) {
+            path->push_front(node->shared_from_this());
+            node = static_cast<Node*>(node->parent.get());
+        }
+        return path;
+    }
+
+   private:
+    void ResetSubgraphStatus() {
+        if (status != Status::UNDISCOVERED) {
+            auto children = DiscreteChildren();
+            for (auto& child : *children)
+                child.node->ResetSubgraphStatus();
+            status = Status::UNDISCOVERED;
+        }
+    }
+
+    void RecursiveDFS(int depth_limit) {
+        Discover();
+        auto children = DiscreteChildren();
+        if (depth_limit > 0)
+            for (auto& child : *children)
+                if (child.node->status == Status::UNDISCOVERED)
+                    child.node->RecursiveDFS(depth_limit - 1);
+        Visit();
+    }
+
+    using PriorityUpdater = std::function<void(Node* parent, Node* child, int weight)>;
     void PFS(PriorityUpdater update_priority) {
         ResetSubgraphStatus();
         auto queue = std::priority_queue<Node*, Vector<Node*>, std::function<bool(Node*, Node*)>>(
@@ -90,25 +132,5 @@ class AbstractPartialOrderingGraphNode {
                 node->Visit();
             }
         }
-    }
-
-   private:
-    void ResetSubgraphStatus() {
-        if (status != Status::UNDISCOVERED) {
-            auto children = DiscreteChildren();
-            for (auto& child : *children)
-                child.node->ResetSubgraphStatus();
-            status = Status::UNDISCOVERED;
-        }
-    }
-
-    void RecursiveDFS(int depth_limit) {
-        Discover();
-        auto children = DiscreteChildren();
-        if (depth_limit > 0)
-            for (auto& child : *children)
-                if (child.node->status == Status::UNDISCOVERED)
-                    child.node->RecursiveDFS(depth_limit - 1);
-        Visit();
     }
 };

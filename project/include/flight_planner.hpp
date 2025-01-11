@@ -1,6 +1,8 @@
 #pragma once
 #include "flight_graph_airport_only.hpp"
 #include "flight_graph_complete.hpp"
+#include "flight_graph_complete_with_price.hpp"
+#include "flight_graph_complete_with_time.hpp"
 
 class Planner {
    private:
@@ -50,13 +52,29 @@ class Planner {
         return ConvertPathList(paths);
     }
 
-    struct ShortestPathResult {
-    };
-    ShortestPathResult query_shortest_path(int airport_1, int airport_2, int start_time, int end_time);
+    std::optional<Path> QueryMinimumTimePath(
+        int airport_from,
+        int airport_to,
+        DateTime datetime_from = LONG_LONG_MIN,
+        DateTime datetime_to = LONG_LONG_MAX) {
+        auto graph = std::make_shared<FlightGraphCompleteWithTime>(db);
+        auto from = graph->GetNode({airport_from, datetime_from});
+        auto to = graph->GetNode({airport_to, datetime_to});
+        auto path = graph->BestPathTo(from, to);
+        return path.has_value() ? std::make_optional(ConvertPath(path.value())) : std::nullopt;
+    }
 
-    struct MinimumCostPathResult {
-    };
-    MinimumCostPathResult query_minimum_cost_path(int airport_1, int airport_2, int start_time, int end_time);
+    std::optional<Path> QueryMinimumCostPath(
+        int airport_from,
+        int airport_to,
+        DateTime datetime_from = LONG_LONG_MIN,
+        DateTime datetime_to = LONG_LONG_MAX) {
+        auto graph = std::make_shared<FlightGraphCompleteWithPrice>(db);
+        auto from = graph->GetNode({airport_from, datetime_from});
+        auto to = graph->GetNode({airport_to, datetime_to});
+        auto path = graph->BestPathTo(from, to);
+        return path.has_value() ? std::make_optional(ConvertPath(path.value())) : std::nullopt;
+    }
 
    private:
     Path ConvertPath(AbstractFlightGraph::Path path) {

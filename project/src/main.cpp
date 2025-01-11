@@ -73,6 +73,54 @@ int main() {
                 printf("\n");
             }
         }
+        if (query.starts_with("minimum_cost_path")) {
+            query = query.substr(18);
+            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
+            query = query.substr(query.find(' ') + 1);
+            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
+            query = query.substr(query.find(' ') + 1);
+            auto date_from = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto time_from = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto date_to = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto time_to = query;
+            auto datetime_from = db->ParseDateTime(date_from + " " + time_from);
+            auto datetime_to = db->ParseDateTime(date_to + " " + time_to);
+            auto result = planner->QueryMinimumCostPath(airport_from, airport_to, datetime_from, datetime_to);
+            if (result.has_value())
+                for (auto record : *result.value()) {
+                    printf("%d ", record.id);
+                }
+            else
+                printf("No path found");
+            printf("\n");
+        }
+        if (query.starts_with("shortest_path")) {
+            query = query.substr(14);
+            auto airport_from = std::stoi(query.substr(0, query.find(' ')));
+            query = query.substr(query.find(' ') + 1);
+            auto airport_to = std::stoi(query.substr(0, query.find(' ')));
+            query = query.substr(query.find(' ') + 1);
+            auto date_from = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto time_from = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto date_to = query.substr(0, query.find(' '));
+            query = query.substr(query.find(' ') + 1);
+            auto time_to = query;
+            auto datetime_from = db->ParseDateTime(date_from + " " + time_from);
+            auto datetime_to = db->ParseDateTime(date_to + " " + time_to);
+            auto result = planner->QueryMinimumTimePath(airport_from, airport_to, datetime_from, datetime_to);
+            if (result.has_value())
+                for (auto record : *result.value()) {
+                    printf("%d ", record.id);
+                }
+            else
+                printf("No path found");
+            printf("\n");
+        }
     }
     return 0;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include "abstract_partial_ordering_graph_node.hpp"
 #include "flight_types.hpp"
 
@@ -23,7 +24,7 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     virtual bool IsContinuousChild(NodeKey parent, NodeKey child) const = 0;
 
    public:
-    class Node : public AbstractPartialOrderingGraphNode<Node>, std::enable_shared_from_this<Node> {
+    class Node : public AbstractPartialOrderingGraphNode<Node> {
         friend class AbstractFlightGraph;
 
        private:
@@ -76,5 +77,19 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
         });
         from->DFS(depth_limit);
         return result;
+    }
+
+    std::optional<Path> BestPathTo(PNode from, PNode to) {
+        OnNodeVisited.AddListener([to](auto node) {
+            if (node->IsContinuousChild(to)) {
+                throw node->GetPath();
+            }
+        });
+        try {
+            from->PFS();
+        } catch (Path path) {
+            return path;
+        }
+        return std::nullopt;
     }
 };

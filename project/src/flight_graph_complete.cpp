@@ -17,7 +17,7 @@ FlightGraphComplete::DiscreteChildrenOf(NodeKey node) const {
         auto record = flight_database->QueryRecordById(record_id);
         if (record.datetime_from < no_sooner_than)
             continue;
-        edge_keys->push_back({{record.airport_to, record.datetime_to}, Weight(record)});
+        edge_keys->push_back({{record.airport_to, record.datetime_to}, Weight(node, record)});
     }
     return edge_keys;
 }
