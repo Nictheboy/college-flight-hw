@@ -27,6 +27,18 @@ int main() {
             }
             printf("\n");
         }
+        if (query.starts_with("bfs")) {
+            query = query.substr(4);
+            auto airport_id = std::stoi(query.substr(0, query.find(' ')));
+            query = query.substr(query.find(' ') + 1);
+            auto start_time = query;
+            auto result = planner->query_bfs(airport_id, start_time);
+            printf("%d", airport_id);
+            for (auto& edge : *result) {
+                printf(" %d", edge.node->Key().airport);
+            }
+            printf("\n");
+        }
     }
     return 0;
 }

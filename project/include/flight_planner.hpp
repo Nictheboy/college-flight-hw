@@ -4,20 +4,45 @@
 class Planner {
    private:
     std::shared_ptr<FlightDatabase> db;
-    std::shared_ptr<FlightGraphComplete> graph_complete;
 
    public:
     Planner(std::shared_ptr<FlightDatabase> db)
-        : db(db), graph_complete(std::make_shared<FlightGraphComplete>(db)) {}
+        : db(db) {}
+
+    void SyncAirportDiscoveryAndVisitation(std::shared_ptr<AbstractFlightGraph> graph) {
+        graph->OnNodeDiscovered.AddListener([&](auto node) {
+            auto airport = node.Key().airport;
+            auto other_records_id = db->QueryRecordIdsByAirportTo(airport);
+            for (auto record_id : *other_records_id) {
+                auto record = db->QueryRecordById(record_id);
+                auto node = graph->GetNode({record.airport_to, record.datetime_to});
+                node->status = AbstractFlightGraph::Node::Status::DISCOVERED;
+            }
+        });
+        graph->OnNodeVisited.AddListener([&](auto node) {
+            auto airport = node.Key().airport;
+            auto other_records_id = db->QueryRecordIdsByAirportTo(airport);
+            for (auto record_id : *other_records_id) {
+                auto record = db->QueryRecordById(record_id);
+                auto node = graph->GetNode({record.airport_to, record.datetime_to});
+                node->status = AbstractFlightGraph::Node::Status::VISITED;
+            }
+        });
+    }
 
     auto query_dfs(int airport_id, std::string start_time) {
-        auto node = graph_complete->GetNode({airport_id, db->ParseDateTime(start_time)});
+        auto graph = std::make_shared<FlightGraphComplete>(db);
+        SyncAirportDiscoveryAndVisitation(graph);
+        auto node = graph->GetNode({airport_id, db->ParseDateTime(start_time)});
         return node->DFS();
     }
 
-    struct BFSResult {
-    };
-    BFSResult query_bfs(int airport_id, std::string start_time);
+    auto query_bfs(int airport_id, std::string start_time) {
+        auto graph = std::make_shared<FlightGraphComplete>(db);
+        SyncAirportDiscoveryAndVisitation(graph);
+        auto node = graph->GetNode({airport_id, db->ParseDateTime(start_time)});
+        return node->BFS();
+    }
 
     struct ConnectivityResult {
     };

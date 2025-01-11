@@ -1,4 +1,4 @@
-// Copied from: https://github.com/surakarta-game/surakarta-core/blob/main/include/surakarta_logger.h
+// Copied from: https://github.com/surakarta-game/surakarta-core/blob/main/src/surakarta_logger.cpp
 // This is part of one of my previous labs.
 
 #include "surakarta_logger.hpp"

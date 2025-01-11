@@ -159,10 +159,10 @@ struct Vector {
     }
 
     Vector(Vector const& that)
-        : Vector(that) {}
+        : Vector(that, Alloc()) {}
 
     Vector(Vector const& that, Alloc const& alloc)
-        : Vector(that, alloc) {}
+        : Vector(that.begin(), that.end(), alloc) {}
 
     Vector& operator=(Vector const& that) {
         ~Vector();

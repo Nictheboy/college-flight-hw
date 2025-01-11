@@ -51,5 +51,8 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     AbstractFlightGraph(Airport airport_min, Airport airport_max);
     ~AbstractFlightGraph() = default;
 
+    mutable SurakartaEvent<Node&> OnNodeDiscovered;
+    mutable SurakartaEvent<Node&> OnNodeVisited;
+
     PNode GetNode(NodeKey key) const;
 };

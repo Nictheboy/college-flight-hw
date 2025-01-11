@@ -40,6 +40,8 @@ AbstractFlightGraph::PNode AbstractFlightGraph::GetNode(NodeKey key) const {
             return node;
     }
     auto node = std::shared_ptr<Node>(new Node(shared_from_this(), key));
+    node->OnDiscovered.AddListener([this](Node& node) { OnNodeDiscovered.Invoke(node); });
+    node->OnVisited.AddListener([this](Node& node) { OnNodeVisited.Invoke(node); });
     nodes->push_back(node);
     return node;
 }
