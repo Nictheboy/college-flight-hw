@@ -108,7 +108,7 @@ int main() {
                     printf("No path found\n");
             } else {
                 if (!operation.empty())
-                    printf("Unknown operation: %s", operation.c_str());
+                    printf("Unknown operation: %s\n", operation.c_str());
                 failed = true;
             }
         } catch (const std::exception& e) {
