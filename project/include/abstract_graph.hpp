@@ -1,16 +1,16 @@
 #pragma once
 #include <optional>
-#include "abstract_partial_ordering_graph_node.hpp"
+#include "abstract_node.hpp"
 
 template <typename NodeKey, typename ConcreteGraph>
 class AbstractGraph {
    public:
-    class Node : public AbstractPartialOrderingGraphNode<Node> {
+    class Node : public AbstractNode<Node> {
         friend class AbstractGraph<NodeKey, ConcreteGraph>;
 
        private:
-        using Edge = AbstractPartialOrderingGraphNode<Node>::Edge;
-        using PNode = AbstractPartialOrderingGraphNode<Node>::PNode;
+        using Edge = AbstractNode<Node>::Edge;
+        using PNode = AbstractNode<Node>::PNode;
         std::weak_ptr<AbstractGraph<NodeKey, ConcreteGraph>> graph;
         const NodeKey key;
         std::shared_ptr<Vector<Edge>> discrete_children;
