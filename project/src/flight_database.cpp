@@ -87,53 +87,45 @@ FlightDatabase::QueryRecordByAirportsAndArrivalTime(
 
 std::shared_ptr<Vector<Key>>
 FlightDatabase::QueryRecordIdsByAirportFrom(Airport airport) const {
-    return airport_from_bucket_index[airport - airport_min];
+    return airport_from_bucket_index->Get(airport);
 }
 
 std::shared_ptr<Vector<Key>>
 FlightDatabase::QueryRecordIdsByAirportTo(Airport airport) const {
-    return airport_to_bucket_index[airport - airport_min];
+    return airport_to_bucket_index->Get(airport);
 }
 
 void FlightDatabase::InitAirportRange() {
-    airport_min = airport_max = records[0].airport_from;
+    airport_range.min = airport_range.max = records[0].airport_from;
     for (auto record : records) {
-        airport_min = std::min(airport_min, record.airport_from);
-        airport_max = std::max(airport_max, record.airport_from);
-        airport_min = std::min(airport_min, record.airport_to);
-        airport_max = std::max(airport_max, record.airport_to);
+        airport_range.min = std::min(airport_range.min, record.airport_from);
+        airport_range.max = std::max(airport_range.max, record.airport_from);
+        airport_range.min = std::min(airport_range.min, record.airport_to);
+        airport_range.max = std::max(airport_range.max, record.airport_to);
     }
 }
 
 void FlightDatabase::InitAirportBucketIndex() {
-    auto size = airport_max - airport_min + 1;
-    airport_from_bucket_index.resize(size);
-    airport_to_bucket_index.resize(size);
-    for (auto i = 0; i < size; i++) {
-        airport_from_bucket_index[i] = std::make_shared<Vector<Key>>();
-        airport_to_bucket_index[i] = std::make_shared<Vector<Key>>();
+    airport_from_bucket_index =
+        std::make_shared<AbstractFlightGraphNodeContainer<Key>>(airport_range);
+    airport_to_bucket_index =
+        std::make_shared<AbstractFlightGraphNodeContainer<Key>>(airport_range);
+    for (auto& record : records) {
+        airport_from_bucket_index->Add(record.airport_from, record.datetime_from, record.id);
+        airport_to_bucket_index->Add(record.airport_to, record.datetime_to, record.id);
     }
-    for (auto record : records) {
-        airport_from_bucket_index[record.airport_from - airport_min]->push_back(record.id);
-        airport_to_bucket_index[record.airport_to - airport_min]->push_back(record.id);
-    }
-    // Sort the index according to datetime and airport
-    for (auto i = 0; i < size; i++) {
-        auto from_bucket = airport_from_bucket_index[i];
-        std::sort(from_bucket->begin(), from_bucket->end(), [this](Key a, Key b) {
-            auto& record_a = records[a - 1];
-            auto& record_b = records[b - 1];
-            return record_a.datetime_from < record_b.datetime_from ||
-                   (record_a.datetime_from == record_b.datetime_from &&
-                    record_a.airport_to < record_b.airport_to);
-        });
-        auto to_bucket = airport_to_bucket_index[i];
-        std::sort(to_bucket->begin(), to_bucket->end(), [this](Key a, Key b) {
-            auto& record_a = records[a - 1];
-            auto& record_b = records[b - 1];
-            return record_a.datetime_to < record_b.datetime_to ||
-                   (record_a.datetime_to == record_b.datetime_to &&
-                    record_a.airport_from < record_b.airport_from);
-        });
-    }
+    airport_from_bucket_index->Sort([this](Key a, Key b) {
+        auto& record_a = records[a - 1];
+        auto& record_b = records[b - 1];
+        return record_a.datetime_from < record_b.datetime_from ||
+               (record_a.datetime_from == record_b.datetime_from &&
+                record_a.airport_to < record_b.airport_to);
+    });
+    airport_to_bucket_index->Sort([this](Key a, Key b) {
+        auto& record_a = records[a - 1];
+        auto& record_b = records[b - 1];
+        return record_a.datetime_to < record_b.datetime_to ||
+               (record_a.datetime_to == record_b.datetime_to &&
+                record_a.airport_from < record_b.airport_from);
+    });
 }

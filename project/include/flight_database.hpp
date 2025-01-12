@@ -3,6 +3,7 @@
 #include <miniSTL/stl.hpp>
 #include <optional>
 #include <string>
+#include "abstract_flight_graph_node_container.hpp"
 #include "flight_types.hpp"
 
 class FlightDatabase {
@@ -20,17 +21,16 @@ class FlightDatabase {
     Record QueryRecordByAirportsAndArrivalTime(Airport airport_from, Airport airport_to, DateTime datetime_to) const;
     std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportFrom(Airport airport) const;
     std::shared_ptr<Vector<Key>> QueryRecordIdsByAirportTo(Airport airport) const;
-    DateTime AirportMin() const { return airport_min; }
-    DateTime AirportMax() const { return airport_max; }
+    ::AirportRange AirportRange() const { return airport_range; }
 
    private:
     Vector<Record> records;
     Record ParseRecord(std::string line);
     void LoadDatabase(std::string filename);
 
-    Airport airport_min, airport_max;
+    ::AirportRange airport_range;
     void InitAirportRange();
 
-    Vector<std::shared_ptr<Vector<Key>>> airport_from_bucket_index, airport_to_bucket_index;
+    std::shared_ptr<AbstractFlightGraphNodeContainer<Key>> airport_from_bucket_index, airport_to_bucket_index;
     void InitAirportBucketIndex();
 };

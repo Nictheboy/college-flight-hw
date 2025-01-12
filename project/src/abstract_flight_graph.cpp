@@ -23,25 +23,15 @@ bool AbstractFlightGraph::Node::IsContinuousChild(PNode child) {
     return graph->IsContinuousChild(key, child->Key());
 }
 
-AbstractFlightGraph::AbstractFlightGraph(Airport airport_min, Airport airport_max)
-    : airport_min(airport_min), airport_max(airport_max) {
-    node_pool.resize(airport_max - airport_min + 1);
-    for (Airport airport = airport_min; airport <= airport_max; ++airport) {
-        node_pool[airport - airport_min] = std::make_shared<NodesOfAirport>();
-    }
-}
-
-AbstractFlightGraph::PNode AbstractFlightGraph::GetNode(NodeKey key) const {
+AbstractFlightGraph::PNode AbstractFlightGraph::GetNode(NodeKey key) {
     Airport airport = key.airport;
     DateTime no_sooner_than = key.no_sooner_than;
-    auto nodes = node_pool[airport - airport_min];
-    for (auto& node : *nodes) {
-        if (node->key.no_sooner_than == no_sooner_than)
-            return node;
-    }
+    auto node_opt = node_pool.Get(key.airport, key.no_sooner_than);
+    if (node_opt)
+        return *node_opt;
     auto node = std::shared_ptr<Node>(new Node(shared_from_this(), key));
     node->OnDiscovered.AddListener([this, node]() { OnNodeDiscovered.Invoke(node); });
     node->OnVisited.AddListener([this, node]() { OnNodeVisited.Invoke(node); });
-    nodes->push_back(node);
+    node_pool.Add(key.airport, key.no_sooner_than, node);
     return node;
 }

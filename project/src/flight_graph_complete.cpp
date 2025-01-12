@@ -1,10 +1,7 @@
 #include "../include/flight_graph_complete.hpp"
 
 FlightGraphComplete::FlightGraphComplete(std::shared_ptr<FlightDatabase> flight_database)
-    : AbstractFlightGraph(
-          flight_database->AirportMin(),
-          flight_database->AirportMax()),
-      flight_database(flight_database) {}
+    : AbstractFlightGraph(flight_database->AirportRange()), flight_database(flight_database) {}
 
 std::shared_ptr<Vector<FlightGraphComplete::EdgeKey>>
 FlightGraphComplete::DiscreteChildrenOf(NodeKey node) const {

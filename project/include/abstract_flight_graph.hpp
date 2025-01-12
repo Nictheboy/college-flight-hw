@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include "abstract_flight_graph_node_container.hpp"
 #include "abstract_partial_ordering_graph_node.hpp"
 #include "flight_types.hpp"
 
@@ -28,11 +29,11 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
         friend class AbstractFlightGraph;
 
        private:
-        std::weak_ptr<const AbstractFlightGraph> graph;
+        std::weak_ptr<AbstractFlightGraph> graph;
         const NodeKey key;
         std::shared_ptr<Vector<Edge>> discrete_children;
 
-        Node(std::weak_ptr<const AbstractFlightGraph> graph, NodeKey key)
+        Node(std::weak_ptr<AbstractFlightGraph> graph, NodeKey key)
             : graph(graph), key(key) {}
         void LoadDiscreteChildren();
 
@@ -45,20 +46,19 @@ class AbstractFlightGraph : public std::enable_shared_from_this<AbstractFlightGr
     };
 
    private:
-    Airport airport_min, airport_max;
-
     using PNode = std::shared_ptr<Node>;
-    using NodesOfAirport = List<PNode>;
-    Vector<std::shared_ptr<NodesOfAirport>> node_pool;
+    const AirportRange airport_range;
+    AbstractFlightGraphNodeContainer<PNode> node_pool;
 
    public:
-    AbstractFlightGraph(Airport airport_min, Airport airport_max);
+    AbstractFlightGraph(AirportRange airport_range)
+        : airport_range(airport_range), node_pool(airport_range) {}
     ~AbstractFlightGraph() = default;
 
     mutable SurakartaEvent<PNode> OnNodeDiscovered;
     mutable SurakartaEvent<PNode> OnNodeVisited;
 
-    PNode GetNode(NodeKey key) const;
+    PNode GetNode(NodeKey key);
 
     using Path = std::shared_ptr<List<PNode>>;
     using PathList = std::shared_ptr<List<Path>>;
