@@ -15,7 +15,7 @@ struct AirportRange {
 
     void WithinOrThrow(Airport airport) const {
         if (!Within(airport))
-            throw std::out_of_range("Airport out of range");
+            throw std::out_of_range("Airport " + std::to_string(airport) + " out of range");
     }
 };
 
