@@ -10,6 +10,6 @@ class FlightGraphAirportOnly : public AbstractFlightGraph {
     FlightGraphAirportOnly(std::shared_ptr<FlightDatabase> flight_database);
 
    protected:
-    virtual std::shared_ptr<Vector<EdgeKey>> DiscreteChildrenOf(NodeKey node) const override;
-    virtual bool IsContinuousChild(NodeKey parent, NodeKey child) const override;
+    virtual std::shared_ptr<Vector<EdgeKey>> DiscreteChildrenOf(FlightNodeKey node) const override;
+    virtual bool IsContinuousChild(FlightNodeKey parent, FlightNodeKey child) const override;
 };

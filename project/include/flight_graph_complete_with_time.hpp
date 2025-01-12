@@ -7,7 +7,7 @@ class FlightGraphCompleteWithTime : public FlightGraphComplete {
         : FlightGraphComplete(flight_database) {};
 
    protected:
-    virtual int Weight(NodeKey from, FlightDatabase::Record& record) const override {
+    virtual int Weight(FlightNodeKey from, FlightDatabase::Record& record) const override {
         return record.datetime_to - from.no_sooner_than;
     }
 };

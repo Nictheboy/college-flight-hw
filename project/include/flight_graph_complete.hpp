@@ -10,7 +10,7 @@ class FlightGraphComplete : public AbstractFlightGraph {
     FlightGraphComplete(std::shared_ptr<FlightDatabase> flight_database);
 
    protected:
-    virtual int Weight(NodeKey from, FlightDatabase::Record& record) const { return 0; }
-    virtual std::shared_ptr<Vector<EdgeKey>> DiscreteChildrenOf(NodeKey node) const override;
-    virtual bool IsContinuousChild(NodeKey parent, NodeKey child) const override;
+    virtual int Weight(FlightNodeKey from, FlightDatabase::Record& record) const { return 0; }
+    virtual std::shared_ptr<Vector<EdgeKey>> DiscreteChildrenOf(FlightNodeKey node) const override;
+    virtual bool IsContinuousChild(FlightNodeKey parent, FlightNodeKey child) const override;
 };

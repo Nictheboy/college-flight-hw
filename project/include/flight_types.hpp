@@ -18,3 +18,11 @@ struct AirportRange {
             throw std::out_of_range("Airport out of range");
     }
 };
+
+struct FlightNodeKey {
+    Airport airport;
+    DateTime no_sooner_than;
+    bool operator==(const FlightNodeKey& other) const {
+        return airport == other.airport && no_sooner_than == other.no_sooner_than;
+    }
+};

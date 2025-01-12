@@ -5,7 +5,7 @@ FlightGraphAirportOnly::FlightGraphAirportOnly(std::shared_ptr<FlightDatabase> f
     : AbstractFlightGraph(flight_database->AirportRange()), flight_database(flight_database) {}
 
 std::shared_ptr<Vector<FlightGraphAirportOnly::EdgeKey>>
-FlightGraphAirportOnly::DiscreteChildrenOf(NodeKey node) const {
+FlightGraphAirportOnly::DiscreteChildrenOf(FlightNodeKey node) const {
     auto airport = node.airport;
     auto no_sooner_than = node.no_sooner_than;
     auto record_ids = flight_database->QueryRecordIdsByAirportFrom(airport);
@@ -20,6 +20,6 @@ FlightGraphAirportOnly::DiscreteChildrenOf(NodeKey node) const {
     return edge_keys;
 }
 
-bool FlightGraphAirportOnly::IsContinuousChild(NodeKey parent, NodeKey child) const {
+bool FlightGraphAirportOnly::IsContinuousChild(FlightNodeKey parent, FlightNodeKey child) const {
     return false;
 }
