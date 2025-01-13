@@ -1,8 +1,6 @@
 #pragma once
-#include "flight_graph_airport_only.hpp"
-#include "flight_graph_complete.hpp"
-#include "flight_graph_complete_with_price.hpp"
-#include "flight_graph_complete_with_time.hpp"
+#include "abstract_flight_graph.hpp"
+#include "flight_database.hpp"
 
 class Planner {
    private:

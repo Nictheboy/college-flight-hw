@@ -11,6 +11,13 @@ project(lab
     DESCRIPTION "Data structure course lab."
 )
 
+# add_compile_options(-fsanitize=address)
+# add_compile_options(-g)
+# add_link_options(-fsanitize=address)
+
+# To mitigate a bug maybe related to lifecycle of shared_ptr
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+
 # -------------------------- miniSTL --------------------------
 
 set(miniSTL_SOURCE_DIR miniSTL)

@@ -1,43 +1,79 @@
 #include <catch2/catch_test_macros.hpp>
 #include "../project/include/flight_planner.hpp"
 
+auto PathToString(Planner::Path path) {
+    auto str = std::string();
+    for (auto &record : *path) {
+        str += std::to_string(record.id) + " ";
+    }
+    return str;
+}
+
+auto PathListToString(Planner::PathList path_list) {
+    auto str = std::string();
+    for (auto path : *path_list) {
+        str += PathToString(path) + "; ";
+    }
+    return str;
+}
+
 TEST_CASE("test flight", "[flight]") {
     auto db = std::make_shared<FlightDatabase>("../project/data/flight-data.csv");
     auto planner = std::make_shared<Planner>(db);
 
     SECTION("test dfs") {
         {
-            auto result = planner->EnumerateAirportsDFS(48, db->ParseDateTime("5/5/2017 12:20"));
+            auto result = planner->EnumerateAirportsDFS(35, db->ParseDateTime("5/5/2017 0:00"));
             auto str = std::string();
             for (auto airport : *result) {
                 str += std::to_string(airport) + " ";
             }
-            REQUIRE(str == "48 49 33 67 27 31 50 38 30 52 36 62 25 61 66 32 57 76 56 54 75 37 77 26 60 79 78 58 59 65 55 64 43 46 45 73 44 29 28 71 47 68 70 72 7 11 14 63 12 15 35 34 48 42 4 41 22 8 16 9 5 6 21 3 19 20 51 24 69 74 53 10 18 40 17 2 39 1 13 23 ");
+            REQUIRE(str == "35 34 49 62 50 25 63 14 32 71 38 27 31 61 11 15 52 78 77 67 36 72 66 37 43 46 45 73 57 44 75 59 12 68 76 60 26 79 56 54 30 48 47 7 70 42 3 8 22 16 19 20 6 51 21 9 41 33 24 18 40 17 2 65 58 64 10 39 1 53 55 13 23 ");
         }
     };
 
     SECTION("test bfs") {
         {
-            auto result = planner->EnumerateAirportsBFS(48, db->ParseDateTime("5/5/2017 12:20"));
+            auto result = planner->EnumerateAirportsBFS(35, db->ParseDateTime("5/5/2017 0:00"));
             auto str = std::string();
             for (auto airport : *result) {
                 str += std::to_string(airport) + " ";
             }
-            REQUIRE(str == "48 49 50 38 35 33 66 54 25 31 62 65 67 32 56 52 60 41 72 57 79 53 37 58 68 46 7 27 16 36 14 21 34 22 48 55 73 63 15 78 30 10 42 6 20 11 18 40 17 2 8 64 9 39 1 24 12 13 23 43 44 45 61 75 71 5 3 19 51 77 26 76 59 4 47 70 69 74 29 28 ");
+            REQUIRE(str == "35 34 50 49 48 61 52 18 14 40 60 33 62 31 27 17 36 72 11 67 37 25 32 2 66 65 56 41 57 79 38 58 68 46 7 8 54 16 21 22 64 9 15 78 30 10 42 6 20 39 63 1 24 53 12 55 73 13 23 59 5 3 19 51 76 26 44 77 43 45 47 71 75 28 29 70 69 74 ");
         }
     };
 
     SECTION("test connectivity") {
         {
-            auto result = planner->EnumerateAllPaths(48, 50);
-            REQUIRE(result->size() == 19);
+            auto result = planner->EnumerateAllPaths(39, 10);
+            auto str = PathListToString(result);
+            REQUIRE(str == "2300 1369 ; 2300 1370 ; ");
         }
     };
 
+    SECTION("test shortest_path") {
+        {
+            auto result = planner->QueryMinimumTimePath(39, 10, db->ParseDateTime("5/6/2017 0:00"), db->ParseDateTime("5/8/2017 0:00"));
+            auto str = PathToString(result.value());
+            REQUIRE(str == "2300 1369 ");
+        }
+    }
+
+    SECTION("test minimum_cost_path") {
+        {
+            auto result = planner->QueryMinimumCostPath(28, 74, db->ParseDateTime("5/5/2017 0:00"), db->ParseDateTime("5/9/2017 23:59"));
+            auto str = PathToString(result.value());
+            REQUIRE(str == "2113 471 1651 1733 ");
+        }
+        {
+            REQUIRE_THROWS(planner->QueryMinimumCostPath(80, 1, db->ParseDateTime("5/10/2017 0:00"), db->ParseDateTime("10/0/2017 23:59")));
+        }
+    }
+
     SECTION("test all_paths") {
         {
-            auto result = planner->EnumerateAllPaths(48, 50, db->ParseDateTime("5/5/2017 12:00"), db->ParseDateTime("5/8/2017 12:00"));
-            REQUIRE(result->size() == 13);
+            auto result = planner->EnumerateAllPaths(39, 52, db->ParseDateTime("5/5/2017 0:00"), db->ParseDateTime("5/9/2017 23:59"));
+            REQUIRE(result->size() == 8);
         }
     };
 }

@@ -1,8 +1,33 @@
 #include "../include/flight_planner.hpp"
+#include "../include/flight_graph_complete.hpp"
+#include "../include/flight_graph_complete_with_price.hpp"
+#include "../include/flight_graph_complete_with_time.hpp"
+
+static void SyncAirportStatus(std::shared_ptr<AbstractFlightGraph> graph, std::shared_ptr<FlightDatabase> db) {
+    graph->OnNodeDiscovered.AddListener([&](auto node) {
+        auto result = db->QueryRecordIdsByAirportTo(node->Key().airport);
+        for (auto id : *result) {
+            auto record = db->QueryRecordById(id);
+            auto node = graph->GetNode({record.airport_to, record.datetime_to});
+            if (node->GetStatus() == AbstractFlightGraph::Node::Status::UNDISCOVERED)
+                node->Discover(false);
+        }
+    });
+    graph->OnNodeVisited.AddListener([&](auto node) {
+        auto result = db->QueryRecordIdsByAirportTo(node->Key().airport);
+        for (auto id : *result) {
+            auto record = db->QueryRecordById(id);
+            auto node = graph->GetNode({record.airport_to, record.datetime_to});
+            if (node->GetStatus() == AbstractFlightGraph::Node::Status::DISCOVERED)
+                node->Visit(false);
+        }
+    });
+}
 
 std::shared_ptr<List<Airport>> Planner::EnumerateAirportsDFS(Airport airport, DateTime datetime_from) {
-    auto graph = std::make_shared<FlightGraphAirportOnly>(db);
+    auto graph = std::make_shared<FlightGraphComplete>(db);
     auto result = std::make_shared<List<Airport>>();
+    SyncAirportStatus(graph, db);
     graph->OnNodeDiscovered.AddListener([&](auto node) {
         result->push_back(node->Key().airport);
     });
@@ -12,8 +37,9 @@ std::shared_ptr<List<Airport>> Planner::EnumerateAirportsDFS(Airport airport, Da
 }
 
 std::shared_ptr<List<Airport>> Planner::EnumerateAirportsBFS(Airport airport, DateTime datetime_from) {
-    auto graph = std::make_shared<FlightGraphAirportOnly>(db);
+    auto graph = std::make_shared<FlightGraphComplete>(db);
     auto result = std::make_shared<List<Airport>>();
+    SyncAirportStatus(graph, db);
     graph->OnNodeDiscovered.AddListener([&](auto node) {
         result->push_back(node->Key().airport);
     });
